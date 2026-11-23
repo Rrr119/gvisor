@@ -1119,6 +1119,8 @@ func sentryGODEBUG(conf *config.Config) []string {
 	// initializers, before main runs.
 	if !conf.ProfileEnable {
 		godebug = append(godebug, "memprofilerate=0")
+	} else if conf.ProfileHeapRate != 0 {
+		godebug = append(godebug, "memprofilerate="+strconv.Itoa(conf.ProfileHeapRate))
 	}
 	return godebug
 }
@@ -1611,6 +1613,13 @@ func (s *Sandbox) createSandboxProcess(conf *config.Config, args *Args) error {
 		}
 	}
 	cmd.Args = append(cmd.Args, "--total-memory", strconv.FormatUint(mem, 10))
+	productName, err := specutils.ProductName(args.Spec)
+	if err != nil {
+		return err
+	}
+	if productName != "" {
+		cmd.Args = append(cmd.Args, "--product-name", productName)
+	}
 
 	if args.Attached {
 		// Kill sandbox if parent process exits in attached mode.
